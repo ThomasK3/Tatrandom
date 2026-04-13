@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Štít – Náhodný výběr hory z Tater</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="page">
+
+    <header class="header">
+      <svg class="header-mountain" viewBox="0 0 160 80" fill="none" aria-hidden="true">
+        <polyline points="0,80 40,28 65,50 100,10 130,42 160,80" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" fill="none"/>
+        <circle cx="100" cy="10" r="2.5" fill="currentColor"/>
+      </svg>
+      <h1 class="header-title">Štít</h1>
+      <p class="header-tagline">Náhodný výběr hory z Tater</p>
+    </header>
+
+    <main class="main">
+
+      <!-- Filters -->
+      <section class="section" aria-label="Filtry">
+        <p class="section-label">Obtížnost</p>
+        <div class="pill-group" id="diff-group" role="group" aria-label="Obtížnost">
+          <button class="pill active" data-diff="all">Vše</button>
+          <button class="pill" data-diff="easy">Snadná</button>
+          <button class="pill" data-diff="medium">Střední</button>
+          <button class="pill" data-diff="hard">Těžká</button>
+          <button class="pill" data-diff="expert">Expert</button>
+        </div>
+
+        <p class="section-label u-mt">Země</p>
+        <div class="pill-group" id="country-group" role="group" aria-label="Země">
+          <button class="pill active" data-country="all">Vše</button>
+          <button class="pill" data-country="SK">🇸🇰 Slovensko</button>
+          <button class="pill" data-country="PL">🇵🇱 Polsko</button>
+        </div>
+      </section>
+
+      <!-- Altitude slider -->
+      <section class="section" aria-label="Výška">
+        <div class="slider-header">
+          <p class="section-label">Minimální výška</p>
+          <span class="slider-value" id="slider-value">1 000 m</span>
+        </div>
+        <input
+          type="range"
+          id="alt-slider"
+          class="slider"
+          min="1000"
+          max="2600"
+          step="50"
+          value="1000"
+          aria-label="Minimální výška v metrech"
+        />
+        <div class="slider-ticks">
+          <span>1 000 m</span>
+          <span>1 800 m</span>
+          <span>2 600 m</span>
+        </div>
+      </section>
+
+      <!-- CTA -->
+      <section class="section">
+        <button class="draw-btn" id="draw-btn" type="button">
+          Vylosovat horu →
+        </button>
+        <p class="draw-hint" id="draw-hint"></p>
+      </section>
+
+      <!-- Result card -->
+      <section class="result-wrap" id="result-wrap" aria-live="polite" aria-atomic="true">
+        <div class="result-card" id="result-card">
+          <div class="result-card-inner" id="result-inner"></div>
+        </div>
+      </section>
+
+      <!-- History -->
+      <section class="history-wrap" id="history-wrap" hidden>
+        <p class="section-label">Poslední výběry</p>
+        <div class="history-chips" id="history-chips"></div>
+      </section>
+
+    </main>
+
+    <footer class="footer">
+      <p>Tatry &middot; <span id="pool-count"></span></p>
+    </footer>
+
+  </div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
