@@ -249,52 +249,157 @@ body {
 }
 
 .result-card.visible {
-  max-height: 600px;
+  max-height: 1400px;
   opacity: 1;
   transform: translateY(0);
   pointer-events: auto;
 }
 
 .result-card-inner {
-  padding: 1.75rem 1.5rem;
+  padding: 0;   /* photo bleeds to edges; body has its own padding */
 }
 
-/* ── Result card content ── */
-.rc-diff-row {
-  display: flex;
-  align-items: center;
-  gap: .6rem;
-  margin-bottom: .9rem;
-}
-
-.rc-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
+/* ── Photo block ── */
+.rc-photo {
+  width: 100%;
+  height: 200px;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  overflow: hidden;
+  background: var(--col-bg);
   flex-shrink: 0;
 }
-.rc-dot-easy   { background: #34c97a; }
-.rc-dot-medium { background: #f5c542; }
-.rc-dot-hard   { background: #f07c3a; }
-.rc-dot-expert { background: #e03c5a; }
 
-.rc-diff-label {
-  font-size: .78rem;
-  font-weight: 600;
-  letter-spacing: .08em;
-  text-transform: uppercase;
+.rc-photo-skeleton {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    var(--col-border) 25%,
+    #ede9e1 50%,
+    var(--col-border) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-sweep 1.4s ease-in-out infinite;
+}
+
+@keyframes skeleton-sweep {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.rc-photo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.rc-photo-fallback {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.rc-photo-credit {
+  font-size: .68rem;
   color: var(--col-muted);
+  text-align: right;
+  padding: .3rem .75rem .15rem;
+  background: var(--col-surface);
+  letter-spacing: .02em;
+}
+
+/* ── Weather strip ── */
+.rc-weather {
+  border-bottom: 1px solid var(--col-border);
+  background: var(--col-bg);
+  min-height: 48px;
+}
+
+.rc-weather[hidden] { display: none; }
+
+.rc-weather-skeleton {
+  height: 48px;
+  background: linear-gradient(
+    90deg,
+    var(--col-border) 25%,
+    #ede9e1 50%,
+    var(--col-border) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-sweep 1.4s ease-in-out infinite;
+}
+
+.rc-weather-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: .25rem .75rem;
+  padding: .6rem 1.25rem;
+}
+
+.rc-weather-stats {
+  display: flex;
+  gap: .9rem;
+  flex-wrap: wrap;
+}
+
+.rc-weather-item {
+  font-size: .82rem;
+  color: var(--col-muted);
+}
+
+.rc-weather-item strong {
+  color: var(--col-text);
+  font-weight: 600;
+}
+
+.rc-weather-note {
+  font-size: .68rem;
+  color: var(--col-muted);
+  opacity: .75;
+  white-space: nowrap;
+}
+
+/* ── Card body (below photo) ── */
+.rc-body {
+  padding: 1.5rem 1.5rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* ── 2. Name + country badge ── */
+.rc-header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: .75rem;
 }
 
 .rc-name {
   font-family: var(--font-heading);
-  font-size: clamp(1.6rem, 6vw, 2.2rem);
+  font-size: clamp(1.5rem, 6vw, 2rem);
   font-weight: 700;
   line-height: 1.15;
-  margin-bottom: .75rem;
   color: var(--col-text);
 }
 
+.rc-country-badge {
+  flex-shrink: 0;
+  margin-top: .25rem;
+  padding: .2rem .6rem;
+  border-radius: 999px;
+  border: 1px solid var(--col-border);
+  background: var(--col-bg);
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .06em;
+  color: var(--col-muted);
+}
+
+/* ── 3. Altitude ── */
 .rc-alt {
   display: inline-flex;
   align-items: baseline;
@@ -303,7 +408,7 @@ body {
   border: 1px solid #BFD9CC;
   border-radius: var(--radius-sm);
   padding: .3rem .75rem;
-  margin-bottom: 1.25rem;
+  align-self: flex-start;
 }
 
 .rc-alt-num {
@@ -318,32 +423,119 @@ body {
   color: var(--col-muted);
 }
 
-.rc-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: .5rem 1.25rem;
-  margin-bottom: 1.25rem;
+.rc-alt-source {
+  font-size: .68rem;
+  color: var(--col-muted);
+  opacity: .7;
+  align-self: flex-end;
+  padding-bottom: .05rem;
 }
 
-.rc-meta-item {
+/* ── 4. Meta 2×2 grid ── */
+.rc-meta-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .5rem;
+}
+
+.rc-meta-cell {
+  background: var(--col-bg);
+  border: 1px solid var(--col-border);
+  border-radius: var(--radius-sm);
+  padding: .55rem .75rem;
   display: flex;
-  align-items: center;
-  gap: .35rem;
-  font-size: .82rem;
+  flex-direction: column;
+  gap: .2rem;
+}
+
+.rc-meta-label {
+  font-size: .65rem;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
   color: var(--col-muted);
 }
 
-.rc-meta-icon {
-  font-style: normal;
-  font-size: .9rem;
+.rc-meta-val {
+  font-size: .85rem;
+  font-weight: 500;
+  color: var(--col-text);
 }
 
-.rc-divider {
-  height: 1px;
-  background: var(--col-border);
-  margin-bottom: 1.1rem;
+.rc-diff-val {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
 }
 
+.rc-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.rc-dot-easy   { background: #34c97a; }
+.rc-dot-medium { background: #f5c542; }
+.rc-dot-hard   { background: #f07c3a; }
+.rc-dot-expert { background: #e03c5a; }
+
+/* ── 5. Guide required badge ── */
+.rc-guide-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .45rem .9rem;
+  border-radius: var(--radius-sm);
+  background: #FFF4E5;
+  border: 1px solid #F0C97A;
+  color: #9A6000;
+  font-size: .8rem;
+  font-weight: 600;
+  align-self: flex-start;
+}
+
+/* ── 6. Facts row ── */
+.rc-facts {
+  display: flex;
+  flex-direction: column;
+  gap: .45rem;
+  padding: .85rem;
+  background: var(--col-bg);
+  border: 1px solid var(--col-border);
+  border-radius: var(--radius-sm);
+}
+
+.rc-fact {
+  display: flex;
+  flex-direction: column;
+  gap: .1rem;
+}
+
+.rc-fact-label {
+  font-size: .65rem;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--col-muted);
+}
+
+.rc-fact-val {
+  font-size: .82rem;
+  color: var(--col-text);
+  line-height: 1.45;
+}
+
+/* ── 7. Fun fact ── */
+.rc-funfact {
+  font-style: italic;
+  font-size: .85rem;
+  color: var(--col-muted);
+  line-height: 1.65;
+  padding-left: .9rem;
+  border-left: 2px solid var(--col-accent2);
+}
+
+/* ── 8. Description ── */
 .rc-desc {
   font-size: .88rem;
   color: var(--col-muted);
@@ -460,17 +652,6 @@ body {
   font-size: .9rem;
 }
 
-.rc-country {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 1.25rem;
-  font-size: .75rem;
-  letter-spacing: .06em;
-  text-transform: uppercase;
-  color: var(--col-muted);
-  font-weight: 500;
-}
-
 /* ── Footer ── */
 .footer {
   text-align: center;
@@ -484,5 +665,5 @@ body {
   .page { padding: 1.5rem 1rem 3rem; }
   .header-mountain { width: 80px; }
   .section { padding: 1rem; }
-  .result-card-inner { padding: 1.25rem 1.1rem; }
+  .rc-body { padding: 1.1rem 1.1rem 1rem; }
 }

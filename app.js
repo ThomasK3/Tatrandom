@@ -2,8 +2,7 @@ import { mountains } from './data.js';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
-const DIFF_LABEL    = { easy: 'Snadná', medium: 'Střední', hard: 'Těžká', expert: 'Expert' };
-const COUNTRY_LABEL = { SK: '🇸🇰 Slovensko', PL: '🇵🇱 Polsko' };
+const DIFF_LABEL = { easy: 'Snadná', medium: 'Střední', hard: 'Těžká', expert: 'Expert' };
 const HISTORY_MAX   = 3;
 
 // ── State ────────────────────────────────────────────────────────────────────
@@ -130,46 +129,204 @@ function animateCard(fn) {
 
 function showResult(m) {
   animateCard(() => {
-    const timeRow = m.time !== '—'
-      ? `<span class="rc-meta-item"><i class="rc-meta-icon">⏱</i>${m.time}</span>` : '';
-    const gainRow = m.gain !== '—'
-      ? `<span class="rc-meta-item"><i class="rc-meta-icon">↑</i>${m.gain}</span>` : '';
-
-    const mapUrl   = `https://mapy.cz/zakladni?q=${encodeURIComponent(m.name)}`;
+    const mapUrl    = `https://mapy.cz/turisticka?x=${m.lng}&y=${m.lat}&z=14&layers=T`;
     const shareText = `Dnes lezu na ${m.name} (${m.alt} m n. m.) 🏔️ #Štít`;
 
+    const guideBadge = m.guide_required
+      ? `<div class="rc-guide-badge">⚠ Průvodce povinný</div>`
+      : '';
+
+    const timeVal = m.time !== '—' ? m.time : '—';
+    const gainVal = m.gain !== '—' ? m.gain : '—';
+
     resultInner.innerHTML = `
-      <div class="rc-diff-row">
-        <span class="rc-dot rc-dot-${m.diff}"></span>
-        <span class="rc-diff-label">${DIFF_LABEL[m.diff]}</span>
+      <div class="rc-photo" id="rc-photo">
+        <div class="rc-photo-skeleton"></div>
       </div>
-      <h2 class="rc-name">${m.name}</h2>
-      <div class="rc-alt">
-        <span class="rc-alt-num">${m.alt.toLocaleString('cs')}</span>
-        <span class="rc-alt-unit">m n. m.</span>
+      <div class="rc-weather" id="rc-weather">
+        <div class="rc-weather-skeleton"></div>
       </div>
-      <div class="rc-meta">${timeRow}${gainRow}</div>
-      <div class="rc-divider"></div>
-      <p class="rc-desc">${m.desc}</p>
-      <p class="rc-country">${COUNTRY_LABEL[m.country]}</p>
-      <div class="rc-actions">
-        <a  class="rc-action-btn rc-action-map"
-            href="${mapUrl}"
-            target="_blank"
-            rel="noopener noreferrer">
-          Otevřít na Mapy.cz ↗
-        </a>
-        <button class="rc-action-btn rc-action-share"
-                data-text="${shareText.replace(/"/g, '&quot;')}"
-                type="button">
-          Sdílet
-        </button>
+      <div class="rc-body">
+
+        <!-- 2. Name + country badge -->
+        <div class="rc-header-row">
+          <h2 class="rc-name">${m.name}</h2>
+          <span class="rc-country-badge">${m.country}</span>
+        </div>
+
+        <!-- 3. Altitude + source -->
+        <div class="rc-alt">
+          <span class="rc-alt-num">${m.alt.toLocaleString('cs')}</span>
+          <span class="rc-alt-unit">m n. m.</span>
+          <span class="rc-alt-source">${m.alt_source}</span>
+        </div>
+
+        <!-- 4. Meta 2×2 grid -->
+        <div class="rc-meta-grid">
+          <div class="rc-meta-cell">
+            <span class="rc-meta-label">Obtížnost</span>
+            <span class="rc-meta-val rc-diff-val">
+              <span class="rc-dot rc-dot-${m.diff}"></span>${DIFF_LABEL[m.diff]}
+            </span>
+          </div>
+          <div class="rc-meta-cell">
+            <span class="rc-meta-label">Čas výstupu</span>
+            <span class="rc-meta-val">${timeVal}</span>
+          </div>
+          <div class="rc-meta-cell">
+            <span class="rc-meta-label">Převýšení</span>
+            <span class="rc-meta-val">${gainVal}</span>
+          </div>
+          <div class="rc-meta-cell">
+            <span class="rc-meta-label">Nejlepší měsíce</span>
+            <span class="rc-meta-val">${m.best_season}</span>
+          </div>
+        </div>
+
+        <!-- 5. Guide required -->
+        ${guideBadge}
+
+        <!-- 6. Facts row -->
+        <div class="rc-facts">
+          <div class="rc-fact">
+            <span class="rc-fact-label">První výstup</span>
+            <span class="rc-fact-val">${m.first_ascent}</span>
+          </div>
+          <div class="rc-fact">
+            <span class="rc-fact-label">Nejbližší chata</span>
+            <span class="rc-fact-val">${m.nearest_hut}</span>
+          </div>
+        </div>
+
+        <!-- 7. Fun fact -->
+        <blockquote class="rc-funfact">${m.fun_fact}</blockquote>
+
+        <!-- 8. Description -->
+        <p class="rc-desc">${m.desc}</p>
+
+        <!-- 9. Buttons -->
+        <div class="rc-actions">
+          <a class="rc-action-btn rc-action-map"
+             href="${mapUrl}"
+             target="_blank"
+             rel="noopener noreferrer">
+            Turistická mapa →
+          </a>
+          <button class="rc-action-btn rc-action-share"
+                  data-text="${shareText.replace(/"/g, '&quot;')}"
+                  type="button">
+            Sdílet
+          </button>
+        </div>
+
       </div>
     `;
 
-    // Share button
     resultInner.querySelector('.rc-action-share').addEventListener('click', handleShare);
   });
+
+  // Fetch photo and weather asynchronously — don't block the card animation
+  fetchWikiPhoto(m.wiki_title);
+  fetchWeather(m.lat, m.lng, m.alt);
+}
+
+// ── Wikipedia photo ───────────────────────────────────────────────────────────
+
+const WIKI_FALLBACK_SVG = `
+  <svg class="rc-photo-fallback" viewBox="0 0 560 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <rect width="560" height="200" fill="var(--col-bg)"/>
+    <polyline
+      points="0,200 80,120 140,155 220,70 290,110 370,45 440,95 510,60 560,80 560,200"
+      fill="var(--col-border)" stroke="none"/>
+    <circle cx="370" cy="45" r="4" fill="var(--col-muted)" opacity="0.5"/>
+  </svg>`;
+
+async function fetchWikiPhoto(wikiTitle) {
+  const photoEl = document.getElementById('rc-photo');
+  if (!photoEl) return;
+
+  try {
+    const url = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(wikiTitle)}`;
+    const res  = await fetch(url);
+    if (!res.ok) throw new Error('not ok');
+
+    const data = await res.json();
+    const src  = data?.thumbnail?.source;
+
+    // Guard: make sure this card is still the current one
+    if (!document.getElementById('rc-photo')) return;
+
+    if (src) {
+      const img = new Image();
+      img.onload = () => {
+        if (!document.getElementById('rc-photo')) return;
+        photoEl.innerHTML = `
+          <img class="rc-photo-img" src="${src}" alt="${data.title}" loading="lazy"/>
+          <p class="rc-photo-credit">© Wikipedia / Wikimedia Commons</p>
+        `;
+      };
+      img.onerror = () => setFallback(photoEl);
+      img.src = src;
+    } else {
+      setFallback(photoEl);
+    }
+  } catch {
+    if (document.getElementById('rc-photo')) setFallback(photoEl);
+  }
+}
+
+function setFallback(photoEl) {
+  photoEl.innerHTML = WIKI_FALLBACK_SVG;
+}
+
+// ── Weather ───────────────────────────────────────────────────────────────────
+
+function weatherLabel(code) {
+  if (code === 0)                          return 'Jasno';
+  if (code <= 3)                           return 'Polojasno';
+  if (code === 45 || code === 48)          return 'Mlha';
+  if (code >= 51 && code <= 67)            return 'Déšť';
+  if (code >= 71 && code <= 77)            return 'Sníh';
+  if (code >= 80 && code <= 82)            return 'Přeháňky';
+  if (code >= 95 && code <= 99)            return 'Bouřka';
+  return 'Proměnlivě';
+}
+
+async function fetchWeather(lat, lng, alt) {
+  const weatherEl = document.getElementById('rc-weather');
+  if (!weatherEl) return;
+
+  try {
+    const url = `https://api.open-meteo.com/v1/forecast`
+      + `?latitude=${lat}&longitude=${lng}&elevation=${alt}`
+      + `&current=temperature_2m,wind_speed_10m,weather_code`;
+
+    const res  = await fetch(url);
+    if (!res.ok) throw new Error('weather fetch failed');
+    const data = await res.json();
+
+    if (!document.getElementById('rc-weather')) return;
+
+    const c    = data.current;
+    const temp = Math.round(c.temperature_2m);
+    const wind = Math.round(c.wind_speed_10m);
+    const label = weatherLabel(c.weather_code);
+
+    weatherEl.innerHTML = `
+      <div class="rc-weather-inner">
+        <div class="rc-weather-stats">
+          <span class="rc-weather-item">🌡 <strong>${temp}°C</strong></span>
+          <span class="rc-weather-item">💨 <strong>${wind} km/h</strong></span>
+          <span class="rc-weather-item">☁ <strong>${label}</strong></span>
+        </div>
+        <span class="rc-weather-note">Aktuální podmínky na vrcholu</span>
+      </div>
+    `;
+  } catch {
+    // Hide the strip silently on any error
+    const el = document.getElementById('rc-weather');
+    if (el) el.hidden = true;
+  }
 }
 
 function showEmpty() {
