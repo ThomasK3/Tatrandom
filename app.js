@@ -129,7 +129,7 @@ function animateCard(fn) {
 
 function showResult(m) {
   animateCard(() => {
-    const mapUrl    = `https://mapy.cz/turisticka?x=${m.lng}&y=${m.lat}&z=14&layers=T`;
+    const mapUrl    = `https://mapy.cz/turisticka?q=${encodeURIComponent(m.name)}&layers=T`;
     const shareText = `Dnes lezu na ${m.name} (${m.alt} m n. m.) 🏔️ #Štít`;
 
     const guideBadge = m.guide_required
